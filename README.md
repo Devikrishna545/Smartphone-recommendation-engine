@@ -1,206 +1,110 @@
-# 📱 Smartphone Recommendation Engine
+# Smartphone Recommendation Engine
 
-An intelligent agentic AI application that analyzes smartphone data and provides personalized recommendations with natural language intelligence.
+A runnable Python project that searches the included smartphone dataset. It provides:
 
-## ✨ Features
+- a command-line interface for reviews, comparisons, and recommendations;
+- a Google ADK agent that can call those same dataset-backed tools; and
+- a FastAPI backend and Streamlit web dashboard; and
+- unit tests that validate loading and recommendation behavior.
 
-- **Data-Driven Analysis**: Upload your smartphone dataset and get instant insights about device specifications and features
-- **Intelligent Recommendations**: AI-powered agent that understands user preferences and suggests the best smartphones
-- **Question Answering**: Ask natural language questions about phones and get accurate, detailed answers
-- **Multi-Source Data Support**: Process information from various data formats
-- **Real-Time Intelligence**: Leverages advanced AI models for context-aware responses
+## Requirements
 
-## 🚀 Getting Started
+- Python 3.10 or later
+- A Google AI API key only if you plan to run the ADK agent
 
-### Prerequisites
+## Setup
 
-- Python 3.8+
-- pip or conda package manager
-- Virtual environment (recommended)
+```bash
+git clone https://github.com/Devikrishna545/Smartphone-recommendation-engine.git
+cd Smartphone-recommendation-engine
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
 
-### Installation
+On Windows, activate the environment with:
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Devikrishna545/Smartphone-recommendation-engine.git
-   cd Smartphone-recommendation-engine
-   ```
+```powershell
+.venv\Scripts\Activate.ps1
+```
 
-2. **Create a virtual environment**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+The included dataset is at `data/smartphones.csv`; it is loaded automatically.
 
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+## Run the command-line tools
 
-4. **Set up environment variables** (if needed)
+Review a phone by full or partial model name:
+
+```bash
+python -m smartphone_recommendation.cli review "OnePlus 11 5G"
+```
+
+Compare two phones:
+
+```bash
+python -m smartphone_recommendation.cli compare "OnePlus 11 5G" "OnePlus Nord CE 2 Lite 5G"
+```
+
+Find up to five phones within a budget. Prices are Indian rupees (INR), and ratings are on a 0–100 scale:
+
+```bash
+python -m smartphone_recommendation.cli recommend --max-price 60000 --min-rating 89 --require-5g
+```
+
+## Run the Google ADK agent
+
+1. Copy the environment template and add your own key. Never commit the resulting `.env` file.
+
    ```bash
    cp .env.example .env
-   # Edit .env with your configuration
    ```
 
-## 📖 Usage
+2. Set `GOOGLE_API_KEY` in `.env`.
+3. Start the agent from the repository root:
 
-### Basic Usage
+   ```bash
+   adk run smartphone_recommendation
+   ```
 
-```python
-from smartphone_engine import SmartphoneRecommender
+The agent uses `gemini-2.5-flash` and calls only the tools in `smartphone_recommendation/tools.py` for dataset facts.
 
-# Initialize the engine
-recommender = SmartphoneRecommender()
+## Run the web dashboard
 
-# Upload data
-recommender.load_data('path/to/smartphones.csv')
+Open two terminals from the repository root. Activate the virtual environment in both.
 
-# Get recommendations
-recommendations = recommender.recommend(
-    budget=500,
-    preferences={'camera': 'high', 'battery_life': 'long'}
-)
-
-# Ask questions
-answer = recommender.query("What are the best phones under $500?")
-```
-
-### Using the CLI
+Start the FastAPI backend:
 
 ```bash
-python app.py --data path/to/data.csv --mode interactive
+source .venv/bin/activate
+uvicorn smartphone_recommendation.api:app --reload
 ```
 
-### API Endpoints
-
-If using as a web service, the following endpoints are available:
-
-- `POST /upload` - Upload smartphone data
-- `GET /recommend` - Get smartphone recommendations
-- `POST /query` - Ask natural language questions
-
-## 📁 Project Structure
-
-```
-Smartphone-recommendation-engine/
-├── README.md
-├── requirements.txt
-├── .env.example
-├── app.py                 # Main application entry point
-├── config.py             # Configuration settings
-├── data/                 # Sample datasets
-│   └── smartphones.csv
-├── src/
-│   ├── __init__.py
-│   ├── engine.py         # Core recommendation logic
-│   ├── agent.py          # AI agent implementation
-│   ├── utils.py          # Utility functions
-│   └── models/           # Data models
-├── tests/                # Test suite
-│   ├── test_engine.py
-│   └── test_agent.py
-└── notebooks/            # Jupyter notebooks for exploration
-```
-
-## 🧠 How It Works
-
-### 1. Data Processing
-- Accepts various data formats (CSV, JSON, Excel, etc.)
-- Cleans and normalizes smartphone specifications
-- Creates a knowledge base for the AI agent
-
-### 2. Intelligent Agent
-- Uses large language models to understand user queries
-- Analyzes smartphone data against user preferences
-- Provides contextual recommendations with explanations
-
-### 3. Recommendation Engine
-- Scores phones based on multiple criteria
-- Considers budget, features, brand preferences, and more
-- Ranks results by relevance and user preferences
-
-## 🔧 Configuration
-
-Edit `config.py` to customize:
-
-```python
-MODEL_NAME = "gpt-4"  # LLM model to use
-MAX_RECOMMENDATIONS = 5
-DATA_PATH = "data/"
-API_PORT = 5000
-```
-
-## 📊 Dataset Format
-
-Your smartphone data should include columns like:
-
-| phone_name | brand | price | screen | battery | camera | processor |
-|-----------|-------|-------|--------|---------|--------|-----------|
-| iPhone 14 | Apple | 799 | 6.1" | 3200 | 48MP | A16 |
-
-## 🧪 Testing
-
-Run the test suite:
+Start the Streamlit frontend in the second terminal:
 
 ```bash
-pytest tests/
+source .venv/bin/activate
+streamlit run frontend/app.py
 ```
 
-Run with coverage:
+Open the local address Streamlit prints (usually `http://localhost:8501`).
+The dashboard provides a minimal recommendation, comparison/review, and AI-chat
+interface. Recommendation and comparison work without an API key; add
+`GOOGLE_API_KEY` to `.env` and restart the backend to enable AI chat.
+
+## Test
 
 ```bash
-pytest --cov=src tests/
+python -m unittest discover -s tests -v
 ```
 
-## 📦 Dependencies
+## Project layout
 
-- `langchain` - For LLM integration and agents
-- `pandas` - Data manipulation and analysis
-- `numpy` - Numerical computing
-- `Flask` - Web framework (if using API)
-- `python-dotenv` - Environment variable management
-- See `requirements.txt` for complete list
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 👤 Author
-
-**Devikrishna545**
-
-- GitHub: [@Devikrishna545](https://github.com/Devikrishna545)
-
-## 🙏 Acknowledgments
-
-- Thanks to the open-source AI community
-- LangChain for agent framework
-- All contributors and testers
-
-## 📧 Support
-
-For support, email or open an issue on the [GitHub Issues](https://github.com/Devikrishna545/Smartphone-recommendation-engine/issues) page.
-
-## 🗺️ Roadmap
-
-- [ ] Add multi-language support
-- [ ] Implement user preference learning
-- [ ] Create web UI dashboard
-- [ ] Add price trend analysis
-- [ ] Support for more smartphone data sources
-- [ ] Mobile app integration
-
----
-
-**Made with ❤️ for smartphone enthusiasts and tech lovers**
+```text
+data/smartphones.csv                 Dataset
+smartphone_recommendation/tools.py   Dataset loading and recommendation logic
+smartphone_recommendation/cli.py     Command-line entry point
+smartphone_recommendation/agent.py   Google ADK root agent
+smartphone_recommendation/api.py     FastAPI backend
+frontend/app.py                      Streamlit frontend
+tests/test_tools.py                  Automated checks
+```
